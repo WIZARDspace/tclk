@@ -440,6 +440,7 @@ export class FlopRail implements SettlementRail {
     for (const ref of new Set(values)) {
       try {
         const parsed = parseRef(ref);
+        this.checkRef(parsed);
         if (parsed.escrow === `0x${"0".repeat(64)}`) {
           entries.push({ ref, status: "pending", refunded: false });
           continue;

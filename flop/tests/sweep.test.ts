@@ -191,4 +191,31 @@ describe("sweep", () => {
     expect(entry.error).toContain("different network or timing profile");
     expect(chain.refunds).toBe(0);
   });
+  it("refuses a pending journal entry from another timing profile", async () => {
+    const chain = new Chain();
+    let journal = "";
+    const open = chain.open.bind(chain);
+    chain.open = async (request) => {
+      await open(request);
+      throw new Error("receipt lost");
+    };
+    const rail = new FlopRail(
+      chain,
+      {},
+      () => chain.head.timestampMs,
+      async (ref) => {
+        journal = ref;
+      },
+    );
+    await expect(rail.lock(terms(3))).rejects.toBeInstanceOf(
+      FlopSubmissionError,
+    );
+    const other = new FlopRail(chain, { refundMarginBlocks: 31 }, () =>
+      chain.head.timestampMs,
+    );
+    const [entry] = await other.sweep([journal]);
+    expect(entry).toMatchObject({ status: "failed", refunded: false });
+    expect(entry.error).toContain("different network or timing profile");
+    expect(chain.refunds).toBe(0);
+  });
 });
