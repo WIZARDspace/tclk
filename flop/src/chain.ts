@@ -143,8 +143,10 @@ export class PolkadotFlopChain implements FlopChain {
   }
   /**
    * Retries the whole read with linear backoff: devnet RPCs drop by-hash header lookups
-   * transiently, which would otherwise read a healthy escrow as unverifiable. Reads only;
-   * a write is never retried (see finalizedTransaction).
+   * transiently, which would otherwise read a healthy escrow as unverifiable. Every read
+   * error is retried, this transport's own validation included, and the last error
+   * surfaces. Reads only; a write is never retried (see finalizedTransaction),
+   * and the retry waits run outside the write's timeout.
    */
   async snapshot(escrowId?: string, at?: string): Promise<FlopSnapshot> {
     for (let attempt = 1; ; attempt++) {
