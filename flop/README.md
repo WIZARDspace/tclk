@@ -142,7 +142,9 @@ allows the wallet to prepare a fresh attempt. Both checks also refuse a window w
 less than `minClaimWindowMs` left: inclusion, finality and the payee's verification all
 have to fit before `claimByMs`, and a window that runs out after the open has finalized
 leaves the funds locked until refund. On devnet a 45 s window ran out that way and a
-180 s one did not; size `claimByMs` above the floor. The library itself does not persist state.
+180 s one did not; size `claimByMs` above the floor. The floor is a local admission
+check, not part of the reference: two parties can configure different floors, which
+changes only who is willing to sign, never the contract. The library itself does not persist state.
 `FlopSubmissionError` carries that same `pendingRef` and, when available, `txHash`.
 Use `recoverFlopReference(pendingRef, escrowIdFromFinalizedEvent)` to reconstruct
 the reference after a lost receipt, then verify it against the chain. Do not
