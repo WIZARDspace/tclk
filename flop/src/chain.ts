@@ -125,14 +125,15 @@ export class PolkadotFlopChain implements FlopChain {
     if (eraBlocks !== undefined) {
       // A mortal era is a power of two in [4, 65536]; @polkadot/api would round any other
       // value, so refuse it instead. Past blockHashCount the checkpoint is unknown to the
-      // runtime and every transaction would be rejected.
+      // runtime and every transaction would be rejected, so an unknown bound is refused too.
       const hashCount = Number(api.consts?.system?.blockHashCount?.toString());
       if (
         !Number.isSafeInteger(eraBlocks) ||
         eraBlocks < 4 ||
         eraBlocks > 65536 ||
         (eraBlocks & (eraBlocks - 1)) !== 0 ||
-        (Number.isSafeInteger(hashCount) && eraBlocks > hashCount)
+        !Number.isSafeInteger(hashCount) ||
+        eraBlocks > hashCount
       )
         throw new Error("flop: invalid transaction era");
     }

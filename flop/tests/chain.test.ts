@@ -151,13 +151,28 @@ describe("transaction era", () => {
         era: 64,
       });
   });
-  it("checks blockHashCount only when the runtime publishes it", () => {
-    expect(
-      () => new PolkadotFlopChain(runtime(), undefined, 1000, 65536),
-    ).not.toThrow();
+  it("refuses an explicit era when blockHashCount is missing or malformed", () => {
+    expect(() => new PolkadotFlopChain(runtime(), undefined, 1000, 64)).toThrow(
+      "flop: invalid transaction era",
+    );
+    const malformed = runtime();
+    malformed.consts = {
+      system: { blockHashCount: { toString: () => "unknown" } },
+    };
+    expect(() => new PolkadotFlopChain(malformed, undefined, 1000, 64)).toThrow(
+      "flop: invalid transaction era",
+    );
     expect(
       () => new PolkadotFlopChain(runtime(1024), undefined, 1000, 2048),
     ).toThrow("flop: invalid transaction era");
+    expect(
+      () => new PolkadotFlopChain(runtime(1024), undefined, 1000, 1024),
+    ).not.toThrow();
+  });
+  it("leaves an unset era to @polkadot/api when blockHashCount is missing", () => {
+    expect(
+      () => new PolkadotFlopChain(runtime(), undefined, 1000),
+    ).not.toThrow();
   });
 });
 describe("metadata transport", () => {

@@ -22,8 +22,8 @@ All notable changes to this project are documented here. Format follows
 
 - `@flop-labs/tclk-flop`: `transactionEraBlocks` sets how many blocks a signed
   transaction stays valid for. It must be a power of two from 4 to the runtime's
-  `blockHashCount`; any other value is refused rather than rounded. Unset, behaviour
-  is unchanged.
+  `blockHashCount`; any other value, or any value when the runtime does not publish
+  `blockHashCount`, is refused rather than rounded. Unset, behaviour is unchanged.
 - `@flop-labs/tclk-flop`: native FLOP HTLC settlement with devnet defaults and
   explicit testnet/mainnet RPC and genesis configuration. The rail binds terms to
   finalized escrow state, signs locally with the party's Ed25519 key, and supports
