@@ -11,7 +11,10 @@ All notable changes to this project are documented here. Format follows
 - `@flop-labs/tclk-flop`: `lock` no longer signs when less than `minClaimWindowMs`
   (default 90 s) of the claim window is left, checked before journaling and again
   just before signing. A shorter window could close after the open finalized, leaving
-  the escrow unverifiable and the funds locked until refund.
+  the escrow unverifiable and the funds locked until refund. The devnet example now
+  waits out a `FlopLockError` escrow's deadline and refunds it instead of exiting with
+  the escrow Open, and VERIFICATION.md records the measured latency the floor is sized
+  against.
 
 - `tclk_post_frame` now accepts exact decimal-string nonces in addition to safe integer
   numbers, so signed Technocore nonces above JavaScript's safe-integer range are preserved
