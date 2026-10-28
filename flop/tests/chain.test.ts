@@ -201,7 +201,10 @@ describe("snapshot read retry", () => {
         throw new Error("RPC: header unavailable");
       })
       .mockImplementation(header);
-    const chain = new PolkadotFlopChain(api, undefined, 120_000, 3, 0);
+    const chain = new PolkadotFlopChain(api, undefined, 120_000, {
+      readAttempts: 3,
+      readBackoffMs: 0,
+    });
     await expect(chain.snapshot(undefined, h)).resolves.toMatchObject({
       hash: h,
       number: 100,
@@ -213,7 +216,10 @@ describe("snapshot read retry", () => {
     api.rpc.chain.getHeader.mockImplementation(async () => {
       throw new Error("RPC: header unavailable");
     });
-    const chain = new PolkadotFlopChain(api, undefined, 120_000, 3, 0);
+    const chain = new PolkadotFlopChain(api, undefined, 120_000, {
+      readAttempts: 3,
+      readBackoffMs: 0,
+    });
     await expect(chain.snapshot(undefined, h)).rejects.toThrow(
       "header unavailable",
     );
@@ -227,13 +233,10 @@ describe("snapshot read retry", () => {
   ])("rejects a retry policy of %s attempts / %s ms", (attempts, backoff) => {
     expect(
       () =>
-        new PolkadotFlopChain(
-          readOnlyApi(),
-          undefined,
-          120_000,
-          attempts,
-          backoff,
-        ),
+        new PolkadotFlopChain(readOnlyApi(), undefined, 120_000, {
+          readAttempts: attempts,
+          readBackoffMs: backoff,
+        }),
     ).toThrow("retry policy");
   });
 });

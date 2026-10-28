@@ -107,15 +107,25 @@ function integer(value: unknown, field: string): number {
   return n;
 }
 
+/** Settings after the timeout, passed by name so adding one never shifts another. */
+export interface PolkadotFlopChainOptions {
+  /** Tries per snapshot read, the first included (default 3). */
+  readAttempts?: number;
+  /** Wait before retry n is n times this, in ms (default 250). */
+  readBackoffMs?: number;
+}
+
 export class PolkadotFlopChain implements FlopChain {
   readonly account?: string;
+  private readonly readAttempts: number;
+  private readonly readBackoffMs: number;
   constructor(
     readonly api: ApiPromise,
     private readonly signer?: KeyringPair,
     private readonly timeoutMs = 120_000,
-    private readonly readAttempts = 3,
-    private readonly readBackoffMs = 250,
+    options: PolkadotFlopChainOptions = {},
   ) {
+    const { readAttempts = 3, readBackoffMs = 250 } = options;
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1)
       throw new Error("flop: invalid transaction timeout");
     if (
@@ -125,6 +135,8 @@ export class PolkadotFlopChain implements FlopChain {
       readBackoffMs < 0
     )
       throw new Error("flop: invalid read retry policy");
+    this.readAttempts = readAttempts;
+    this.readBackoffMs = readBackoffMs;
     if (signer) {
       if (signer.type !== "ed25519" || signer.publicKey.length !== 32)
         throw new Error("flop: signer must use the party's Ed25519 DID key");
