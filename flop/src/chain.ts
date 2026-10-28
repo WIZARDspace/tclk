@@ -112,14 +112,22 @@ function integer(value: unknown, field: string): number {
   return n;
 }
 
+/** Settings after the timeout, passed by name so adding one never shifts another. */
+export interface PolkadotFlopChainOptions {
+  /** Blocks a signed transaction stays valid for; unset leaves @polkadot/api's mortal default. */
+  eraBlocks?: number;
+}
+
 export class PolkadotFlopChain implements FlopChain {
   readonly account?: string;
+  private readonly eraBlocks?: number;
   constructor(
     readonly api: ApiPromise,
     private readonly signer?: KeyringPair,
     private readonly timeoutMs = 120_000,
-    private readonly eraBlocks?: number,
+    options: PolkadotFlopChainOptions = {},
   ) {
+    const { eraBlocks } = options;
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1)
       throw new Error("flop: invalid transaction timeout");
     if (eraBlocks !== undefined) {
@@ -137,6 +145,7 @@ export class PolkadotFlopChain implements FlopChain {
       )
         throw new Error("flop: invalid transaction era");
     }
+    this.eraBlocks = eraBlocks;
     if (signer) {
       if (signer.type !== "ed25519" || signer.publicKey.length !== 32)
         throw new Error("flop: signer must use the party's Ed25519 DID key");
@@ -335,7 +344,7 @@ export async function connectFlopRail(
       api,
       options.signer,
       options.transactionTimeoutMs,
-      options.transactionEraBlocks,
+      { eraBlocks: options.transactionEraBlocks },
     );
     const rail = new FlopRail(
       chain,

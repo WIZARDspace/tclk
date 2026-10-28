@@ -125,14 +125,20 @@ describe("transaction era", () => {
   });
   it.each([4, 64, 4096])("accepts a %i-block era", (era) => {
     expect(
-      () => new PolkadotFlopChain(runtime(4096), undefined, 1000, era),
+      () =>
+        new PolkadotFlopChain(runtime(4096), undefined, 1000, {
+          eraBlocks: era,
+        }),
     ).not.toThrow();
   });
   it.each([0, 2, 48, 64.5, -64, 131072, 8192])(
     "refuses a %s-block era rather than rounding it",
     (era) => {
       expect(
-        () => new PolkadotFlopChain(runtime(4096), undefined, 1000, era),
+        () =>
+          new PolkadotFlopChain(runtime(4096), undefined, 1000, {
+            eraBlocks: era,
+          }),
       ).toThrow("flop: invalid transaction era");
     },
   );
@@ -142,7 +148,7 @@ describe("transaction era", () => {
     api.tx.hasStation.refundEscrow = vi.fn(() => txs[0]);
     api.tx.hasStation.satisfyEscrow = vi.fn(() => txs[1]);
     const key = { type: "ed25519", publicKey: new Uint8Array(32) } as any;
-    const chain = new PolkadotFlopChain(api, key, 1000, 64);
+    const chain = new PolkadotFlopChain(api, key, 1000, { eraBlocks: 64 });
     await chain.refund(h);
     await chain.satisfy(h, [h]);
     for (const tx of txs)
@@ -152,21 +158,27 @@ describe("transaction era", () => {
       });
   });
   it("refuses an explicit era when blockHashCount is missing or malformed", () => {
-    expect(() => new PolkadotFlopChain(runtime(), undefined, 1000, 64)).toThrow(
-      "flop: invalid transaction era",
-    );
+    expect(
+      () => new PolkadotFlopChain(runtime(), undefined, 1000, { eraBlocks: 64 }),
+    ).toThrow("flop: invalid transaction era");
     const malformed = runtime();
     malformed.consts = {
       system: { blockHashCount: { toString: () => "unknown" } },
     };
-    expect(() => new PolkadotFlopChain(malformed, undefined, 1000, 64)).toThrow(
-      "flop: invalid transaction era",
-    );
     expect(
-      () => new PolkadotFlopChain(runtime(1024), undefined, 1000, 2048),
+      () => new PolkadotFlopChain(malformed, undefined, 1000, { eraBlocks: 64 }),
     ).toThrow("flop: invalid transaction era");
     expect(
-      () => new PolkadotFlopChain(runtime(1024), undefined, 1000, 1024),
+      () =>
+        new PolkadotFlopChain(runtime(1024), undefined, 1000, {
+          eraBlocks: 2048,
+        }),
+    ).toThrow("flop: invalid transaction era");
+    expect(
+      () =>
+        new PolkadotFlopChain(runtime(1024), undefined, 1000, {
+          eraBlocks: 1024,
+        }),
     ).not.toThrow();
   });
   it("leaves an unset era to @polkadot/api when blockHashCount is missing", () => {
